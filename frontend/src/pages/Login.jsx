@@ -12,6 +12,17 @@ export default function Login(){
   // Redirect if already logged in
   React.useEffect(() => {
     if (localStorage.getItem('token')) {
+      // Try to route user to role-specific landing
+      const stored = localStorage.getItem('user');
+      if (stored) {
+        try {
+          const u = JSON.parse(stored);
+          if (u.role === 'technician') return navigate('/kanban');
+          if (u.role === 'manager') return navigate('/manager-calendar');
+          if (u.role === 'admin') return navigate('/');
+          return navigate('/my-requests');
+        } catch (e) { /* fallback */ }
+      }
       navigate('/');
     }
   }, [navigate]);
@@ -21,8 +32,13 @@ export default function Login(){
     setError('');
     setLoading(true);
     try{
-      await login(email, password);
-      navigate('/');
+      const res = await login(email, password);
+      // route based on returned user role
+      const role = res?.user?.role || (localStorage.getItem('user') && JSON.parse(localStorage.getItem('user')).role);
+      if (role === 'technician') navigate('/kanban');
+      else if (role === 'manager') navigate('/manager-calendar');
+      else if (role === 'admin') navigate('/');
+      else navigate('/my-requests');
     }catch(err){
       setError(err?.response?.data?.message || 'Login failed');
     }finally{setLoading(false)}

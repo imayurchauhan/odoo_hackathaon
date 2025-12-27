@@ -244,7 +244,7 @@ export default function RequestsPage() {
                   <td className="action-buttons">
                     <button
                       className="btn-icon btn-view"
-                      onClick={() => navigate(`/requests/${req._id}`)}
+                      onClick={() => navigate(`/request/${req._id}`)}
                       title="View details"
                     >
                       👁️

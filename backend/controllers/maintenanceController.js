@@ -1,15 +1,16 @@
 const MaintenanceRequest = require('../models/MaintenanceRequest');
 const Equipment = require('../models/Equipment');
 
-// Create request: auto-fill team from equipment
+// Create request: auto-fill team from equipment if available
 exports.create = async (req, res, next) => {
   try {
     const payload = req.body;
     const equipment = await Equipment.findById(payload.equipment);
     if (!equipment) return res.status(400).json({ message: 'Invalid equipment' });
 
-    // auto-fill team
+    // auto-fill team if equipment has one assigned
     if (equipment.team) payload.team = equipment.team;
+    // otherwise leave team as null - technicians can still see and pick it
 
     const mr = await MaintenanceRequest.create({ ...payload, createdBy: req.user?.id });
     res.status(201).json(mr);
@@ -23,8 +24,11 @@ exports.list = async (req, res, next) => {
 
     // Role-based filtering
     if (user.role === 'technician') {
-      // Technicians see only requests for their team
-      filter.team = user.team;
+      // Technicians see requests for their team OR unassigned requests (for new request pickup)
+      filter.$or = [
+        { team: user.team },
+        { team: null }
+      ];
     } else if (user.role === 'user' || user.role === 'employee') {
       // Normal users see only requests they created
       filter.createdBy = user.id;
@@ -32,7 +36,11 @@ exports.list = async (req, res, next) => {
     // managers and admins see all requests
 
     if (req.query.type) filter.type = req.query.type;
-    if (req.query.team) filter.team = req.query.team;
+    if (req.query.team) {
+      // If team is explicitly requested, override the OR filter
+      delete filter.$or;
+      filter.team = req.query.team;
+    }
     if (req.query.status) filter.status = req.query.status;
     const items = await MaintenanceRequest.find(filter).populate('equipment team assignedTo createdBy');
     res.json(items);
@@ -123,12 +131,17 @@ exports.pick = async (req, res, next) => {
     const user = req.user;
     if (!user) return res.status(401).json({ message: 'Auth required' });
 
-    // only technicians of assigned team can pick
-    if (user.role !== 'technician' || String(user.team) !== String(mr.team?._id)) {
+    // Technician can pick if: request is for their team OR request has no team assigned
+    const isForTheirTeam = mr.team && String(user.team) === String(mr.team._id);
+    const isUnassigned = !mr.team;
+    
+    if (user.role !== 'technician' || (!isForTheirTeam && !isUnassigned)) {
       return res.status(403).json({ message: 'Not authorized to pick this request' });
     }
 
     mr.assignedTo = user.id;
+    // If request was unassigned, assign the technician's team
+    if (!mr.team) mr.team = user.team;
     mr.status = 'in_progress';
     await mr.save();
     res.json(mr);

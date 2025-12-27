@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
+import { useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import Avatar from '../components/Avatar';
 import DurationModal from '../components/DurationModal';
@@ -14,6 +15,7 @@ const STATUS_CONFIG = {
 };
 
 export default function KanbanBoard() {
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [durationModalOpen, setDurationModalOpen] = useState(false);
@@ -155,12 +157,16 @@ export default function KanbanBoard() {
                         return (
                           <Draggable key={it._id} draggableId={it._id} index={index}>
                             {(prov, snapshot) => (
-                              <div
-                                ref={prov.innerRef}
-                                {...prov.draggableProps}
-                                {...prov.dragHandleProps}
-                                className={`kanban-card ${snapshot.isDragging ? 'dragging' : ''} ${isOverdue ? 'overdue' : ''}`}
-                              >
+                                    <div
+                                      ref={prov.innerRef}
+                                      {...prov.draggableProps}
+                                      {...prov.dragHandleProps}
+                                      className={`kanban-card ${snapshot.isDragging ? 'dragging' : ''} ${isOverdue ? 'overdue' : ''}`}
+                                      onClick={() => navigate(`/request/${it._id}`)}
+                                      role="button"
+                                      tabIndex={0}
+                                      onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/request/${it._id}`); }}
+                                    >
                                 <div className="card-top">
                                   <div className="card-badges">
                                     <span className={`badge type-badge`}>

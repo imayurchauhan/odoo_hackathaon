@@ -1,12 +1,13 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { logout } from '../services/authService';
 import { useAuth } from '../context/AuthContext';
 
 export default function Layout({ children }){
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [sidebarOpen, setSidebarOpen] = React.useState(true);
+  const location = useLocation();
 
   // Role-based navigation
   let navItems = [];
@@ -78,8 +79,8 @@ export default function Layout({ children }){
     gap: '12px',
     color: '#b0b0b0',
     transition: 'all 0.2s',
-    borderLeft: window.location.pathname === href ? '4px solid #00d4ff' : '4px solid transparent',
-    background: window.location.pathname === href ? 'rgba(0,212,255,0.1)' : 'transparent'
+    borderLeft: location.pathname === href ? '4px solid #00d4ff' : '4px solid transparent',
+    background: location.pathname === href ? 'rgba(0,212,255,0.1)' : 'transparent'
   });
 
   const mainStyle = {
@@ -126,15 +127,17 @@ export default function Layout({ children }){
           {sidebarOpen ? '🔧 GearGuard' : '🔧'}
         </div>
         <div style={navStyle}>
-          {localStorage.getItem('token') ? (
+          {localStorage.getItem('token') && !loading ? (
             navItems.map((item, idx) => (
-              <a key={idx} href={item.href} style={{textDecoration:'none'}}>
+              <Link key={idx} to={item.href} style={{textDecoration:'none'}}>
                 <div style={navItemStyle(item.href)}>
                   <span style={{fontSize:'20px'}}>{item.icon}</span>
                   {sidebarOpen && <span>{item.label}</span>}
                 </div>
-              </a>
+              </Link>
             ))
+          ) : loading ? (
+            <div style={{padding:'16px',color:'#9aa0a6',fontSize:14}}>Loading...</div>
           ) : (
             <div style={{padding:'16px',color:'#9aa0a6',fontSize:14}}>Please login to access navigation</div>
           )}
