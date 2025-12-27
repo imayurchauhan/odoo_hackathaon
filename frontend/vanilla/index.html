@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GearGuard – Maintenance Management System</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">🔧 GearGuard</div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-page="dashboard">
+          <span class="icon">📊</span>
+          <span class="label">Dashboard</span>
+        </a>
+        <a href="#" class="nav-item" data-page="equipment">
+          <span class="icon">⚙️</span>
+          <span class="label">Equipment</span>
+        </a>
+        <a href="#" class="nav-item" data-page="requests">
+          <span class="icon">📋</span>
+          <span class="label">Requests</span>
+        </a>
+        <a href="#" class="nav-item" data-page="kanban">
+          <span class="icon">📈</span>
+          <span class="label">Kanban</span>
+        </a>
+        <a href="#" class="nav-item" data-page="calendar">
+          <span class="icon">📅</span>
+          <span class="label">Calendar</span>
+        </a>
+        <a href="#" class="nav-item" data-page="reports">
+          <span class="icon">📊</span>
+          <span class="label">Reports</span>
+        </a>
+        <a href="#" class="nav-item" data-page="teams">
+          <span class="icon">👥</span>
+          <span class="label">Teams</span>
+        </a>
+        <a href="#" class="nav-item" data-page="settings">
+          <span class="icon">⚙️</span>
+          <span class="label">Settings</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- MAIN LAYOUT -->
+    <div class="main-layout">
+      <!-- HEADER -->
+      <header class="header">
+        <div class="header-left">
+          <input type="text" class="search-bar" placeholder="Search equipment, requests, technicians...">
+        </div>
+        <div class="header-right">
+          <button class="icon-btn" title="Notifications">🔔</button>
+          <div class="user-profile">
+            <img src="https://ui-avatars.com/api/?name=John+Doe&size=40" alt="User" class="avatar">
+            <div class="user-info">
+              <div class="user-name">John Doe</div>
+              <div class="user-role">Technician</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- CONTENT -->
+      <main class="content">
+
+        <!-- ===== DASHBOARD PAGE ===== -->
+        <section id="dashboard" class="page active">
+          <h1 class="page-title">Dashboard</h1>
+          
+          <div class="summary-cards">
+            <article class="card card-primary">
+              <div class="card-icon">⚙️</div>
+              <div class="card-content">
+                <p class="card-label">Total Equipment</p>
+                <p class="card-value" id="totalEquipment">24</p>
+              </div>
+            </article>
+            <article class="card card-info">
+              <div class="card-icon">📋</div>
+              <div class="card-content">
+                <p class="card-label">Open Requests</p>
+                <p class="card-value" id="openRequests">8</p>
+              </div>
+            </article>
+            <article class="card card-warning">
+              <div class="card-icon">⚠️</div>
+              <div class="card-content">
+                <p class="card-label">Overdue Requests</p>
+                <p class="card-value" id="overdueRequests">3</p>
+              </div>
+            </article>
+            <article class="card card-success">
+              <div class="card-icon">👥</div>
+              <div class="card-content">
+                <p class="card-label">Active Technicians</p>
+                <p class="card-value" id="activeTechs">7</p>
+              </div>
+            </article>
+          </div>
+
+          <div class="dashboard-grid">
+            <section class="widget">
+              <h2 class="widget-title">Recent Requests</h2>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Equipment</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Assigned To</th>
+                  </tr>
+                </thead>
+                <tbody id="recentRequests">
+                  <tr>
+                    <td>Pump Motor A</td>
+                    <td><span class="badge badge-info">In Progress</span></td>
+                    <td><span class="badge badge-warning">High</span></td>
+                    <td>Mike Johnson</td>
+                  </tr>
+                  <tr>
+                    <td>Drill Press B</td>
+                    <td><span class="badge badge-success">Repaired</span></td>
+                    <td><span class="badge badge-info">Medium</span></td>
+                    <td>Sarah Lee</td>
+                  </tr>
+                </tbody>
+              </table>
+            </section>
+
+            <section class="widget">
+              <h2 class="widget-title">Team Performance</h2>
+              <div class="performance-list">
+                <div class="performance-item">
+                  <div class="perf-name">Team Alpha</div>
+                  <div class="perf-bar">
+                    <div class="perf-progress" style="width:85%"></div>
+                  </div>
+                  <div class="perf-stat">85%</div>
+                </div>
+                <div class="performance-item">
+                  <div class="perf-name">Team Beta</div>
+                  <div class="perf-bar">
+                    <div class="perf-progress" style="width:72%"></div>
+                  </div>
+                  <div class="perf-stat">72%</div>
+                </div>
+                <div class="performance-item">
+                  <div class="perf-name">Team Gamma</div>
+                  <div class="perf-bar">
+                    <div class="perf-progress" style="width:91%"></div>
+                  </div>
+                  <div class="perf-stat">91%</div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <!-- ===== EQUIPMENT PAGE ===== -->
+        <section id="equipment" class="page">
+          <h1 class="page-title">Equipment Management</h1>
+          <button class="btn btn-primary" id="addEquipmentBtn">+ Add Equipment</button>
+          
+          <div class="table-container">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Equipment Name</th>
+                  <th>Serial Number</th>
+                  <th>Department</th>
+                  <th>Team</th>
+                  <th>Technician</th>
+                  <th>Warranty</th>
+                  <th>Location</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="equipmentTable">
+                <tr>
+                  <td>Pump Motor A</td>
+                  <td>PM-2024-001</td>
+                  <td>Production</td>
+                  <td>Team Alpha</td>
+                  <td>Mike Johnson</td>
+                  <td>2025-06</td>
+                  <td>Building A, Floor 2</td>
+                  <td><button class="btn-sm" onclick="openEquipmentModal('Pump Motor A')">Details</button></td>
+                </tr>
+                <tr>
+                  <td>Drill Press B</td>
+                  <td>DP-2024-002</td>
+                  <td>Production</td>
+                  <td>Team Beta</td>
+                  <td>Sarah Lee</td>
+                  <td>2025-12</td>
+                  <td>Building B, Floor 1</td>
+                  <td><button class="btn-sm" onclick="openEquipmentModal('Drill Press B')">Details</button></td>
+                </tr>
+                <tr>
+                  <td>Lathe C</td>
+                  <td>LC-2024-003</td>
+                  <td>Manufacturing</td>
+                  <td>Team Gamma</td>
+                  <td>James Park</td>
+                  <td>2024-09</td>
+                  <td>Building A, Floor 3</td>
+                  <td><button class="btn-sm" onclick="openEquipmentModal('Lathe C')">Details</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ===== MAINTENANCE REQUESTS PAGE ===== -->
+        <section id="requests" class="page">
+          <h1 class="page-title">Maintenance Requests</h1>
+          <button class="btn btn-primary" id="addRequestBtn">+ New Request</button>
+          
+          <div class="filters">
+            <select id="statusFilter" class="filter-select">
+              <option value="">All Status</option>
+              <option value="new">New</option>
+              <option value="in_progress">In Progress</option>
+              <option value="repaired">Repaired</option>
+            </select>
+            <select id="priorityFilter" class="filter-select">
+              <option value="">All Priority</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+
+          <div class="requests-grid" id="requestsList">
+            <article class="request-card">
+              <div class="request-header">
+                <h3>Pump Motor A - Bearing Replacement</h3>
+                <span class="badge badge-warning">High Priority</span>
+              </div>
+              <p class="request-description">Replace worn bearing in pump motor A. Equipment has been making unusual noise.</p>
+              <div class="request-meta">
+                <span><strong>Status:</strong> <span class="badge badge-info">In Progress</span></span>
+                <span><strong>Assigned:</strong> Mike Johnson</span>
+              </div>
+              <div class="request-footer">
+                <button class="btn-sm" onclick="alert('View request details')">View</button>
+              </div>
+            </article>
+
+            <article class="request-card">
+              <div class="request-header">
+                <h3>Drill Press B - Calibration</h3>
+                <span class="badge badge-info">Medium Priority</span>
+              </div>
+              <p class="request-description">Calibrate drill press precision. Preventive maintenance scheduled.</p>
+              <div class="request-meta">
+                <span><strong>Status:</strong> <span class="badge badge-success">Repaired</span></span>
+                <span><strong>Assigned:</strong> Sarah Lee</span>
+              </div>
+              <div class="request-footer">
+                <button class="btn-sm" onclick="alert('View request details')">View</button>
+              </div>
+            </article>
+
+            <article class="request-card">
+              <div class="request-header">
+                <h3>Lathe C - Oil Refill</h3>
+                <span class="badge badge-success">Low Priority</span>
+              </div>
+              <p class="request-description">Refill hydraulic oil and check pressure levels.</p>
+              <div class="request-meta">
+                <span><strong>Status:</strong> <span class="badge badge-default">New</span></span>
+                <span><strong>Assigned:</strong> Unassigned</span>
+              </div>
+              <div class="request-footer">
+                <button class="btn-sm" onclick="alert('View request details')">View</button>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- ===== KANBAN BOARD PAGE ===== -->
+        <section id="kanban" class="page">
+          <h1 class="page-title">Kanban Board</h1>
+          
+          <div class="kanban-board">
+            <!-- NEW COLUMN -->
+            <div class="kanban-column">
+              <div class="column-header">New</div>
+              <div class="kanban-list" data-status="new">
+                <div class="kanban-card" draggable="true">
+                  <div class="card-title">Pump Motor A Bearing</div>
+                  <div class="card-meta">
+                    <span class="badge badge-warning">High</span>
+                    <span class="priority-label">Urgent</span>
+                  </div>
+                </div>
+                <div class="kanban-card" draggable="true">
+                  <div class="card-title">Lathe C Oil Refill</div>
+                  <div class="card-meta">
+                    <span class="badge badge-success">Low</span>
+                    <span class="priority-label">Routine</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- IN PROGRESS COLUMN -->
+            <div class="kanban-column">
+              <div class="column-header">In Progress</div>
+              <div class="kanban-list" data-status="in_progress">
+                <div class="kanban-card" draggable="true">
+                  <div class="card-title">Drill Press B Calibration</div>
+                  <div class="card-meta">
+                    <span class="badge badge-info">Medium</span>
+                    <span class="priority-label">Scheduled</span>
+                  </div>
+                </div>
+                <div class="kanban-card" draggable="true">
+                  <div class="card-title">Conveyor Belt Maintenance</div>
+                  <div class="card-meta">
+                    <span class="badge badge-warning">High</span>
+                    <span class="priority-label">Urgent</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- REPAIRED COLUMN -->
+            <div class="kanban-column">
+              <div class="column-header">Repaired</div>
+              <div class="kanban-list" data-status="repaired">
+                <div class="kanban-card" draggable="true">
+                  <div class="card-title">Generator Repair</div>
+                  <div class="card-meta">
+                    <span class="badge badge-success">Low</span>
+                    <span class="priority-label">Completed</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== CALENDAR PAGE ===== -->
+        <section id="calendar" class="page">
+          <h1 class="page-title">Maintenance Calendar</h1>
+          
+          <div class="calendar-wrapper">
+            <div class="calendar-header">
+              <button id="prevMonth">&lt;</button>
+              <h2 id="currentMonth">December 2024</h2>
+              <button id="nextMonth">&gt;</button>
+            </div>
+
+            <table class="calendar-table">
+              <thead>
+                <tr>
+                  <th>Sun</th>
+                  <th>Mon</th>
+                  <th>Tue</th>
+                  <th>Wed</th>
+                  <th>Thu</th>
+                  <th>Fri</th>
+                  <th>Sat</th>
+                </tr>
+              </thead>
+              <tbody id="calendarBody">
+                <!-- Generated by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="calendar-legend">
+            <div class="legend-item">
+              <span class="legend-dot preventive"></span> Preventive Maintenance
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot corrective"></span> Corrective Maintenance
+            </div>
+          </div>
+        </section>
+
+        <!-- ===== REPORTS PAGE ===== -->
+        <section id="reports" class="page">
+          <h1 class="page-title">Reports & Analytics</h1>
+          
+          <div class="reports-grid">
+            <article class="report-widget">
+              <h3>Equipment Utilization</h3>
+              <div class="chart-placeholder">📊 Chart Data</div>
+              <p>Average equipment usage across all teams</p>
+            </article>
+            
+            <article class="report-widget">
+              <h3>Maintenance Cost</h3>
+              <div class="chart-placeholder">💰 Cost Trends</div>
+              <p>Monthly maintenance expenses</p>
+            </article>
+            
+            <article class="report-widget">
+              <h3>Request Completion Rate</h3>
+              <div class="chart-placeholder">✅ Completion %</div>
+              <p>Percentage of completed requests</p>
+            </article>
+            
+            <article class="report-widget">
+              <h3>Technician Performance</h3>
+              <div class="chart-placeholder">⭐ Performance</div>
+              <p>Top performing technicians</p>
+            </article>
+          </div>
+        </section>
+
+        <!-- ===== TEAMS PAGE ===== -->
+        <section id="teams" class="page">
+          <h1 class="page-title">Teams Management</h1>
+          <button class="btn btn-primary" id="addTeamBtn">+ Add Team</button>
+          
+          <div class="teams-grid">
+            <article class="team-card">
+              <h3>Team Alpha</h3>
+              <p class="team-description">Production floor maintenance specialists</p>
+              <div class="team-members">
+                <div class="team-member">👤 Mike Johnson</div>
+                <div class="team-member">👤 Lisa Chen</div>
+                <div class="team-member">👤 Tom Wilson</div>
+              </div>
+              <div class="team-stats">
+                <span>📋 12 Requests</span>
+                <span>✅ 11 Completed</span>
+              </div>
+            </article>
+
+            <article class="team-card">
+              <h3>Team Beta</h3>
+              <p class="team-description">Manufacturing equipment experts</p>
+              <div class="team-members">
+                <div class="team-member">👤 Sarah Lee</div>
+                <div class="team-member">👤 David Brown</div>
+              </div>
+              <div class="team-stats">
+                <span>📋 8 Requests</span>
+                <span>✅ 8 Completed</span>
+              </div>
+            </article>
+
+            <article class="team-card">
+              <h3>Team Gamma</h3>
+              <p class="team-description">Hydraulics and precision tools</p>
+              <div class="team-members">
+                <div class="team-member">👤 James Park</div>
+                <div class="team-member">👤 Emma Davis</div>
+                <div class="team-member">👤 Robert Miller</div>
+              </div>
+              <div class="team-stats">
+                <span>📋 15 Requests</span>
+                <span>✅ 13 Completed</span>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- ===== SETTINGS PAGE ===== -->
+        <section id="settings" class="page">
+          <h1 class="page-title">Settings</h1>
+          
+          <div class="settings-container">
+            <section class="settings-section">
+              <h2>Account Settings</h2>
+              <form class="form">
+                <div class="form-group">
+                  <label>Full Name</label>
+                  <input type="text" value="John Doe" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label>Email</label>
+                  <input type="email" value="john@gearguard.com" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label>Role</label>
+                  <select class="form-input">
+                    <option>Technician</option>
+                    <option>Manager</option>
+                    <option>Admin</option>
+                  </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+              </form>
+            </section>
+
+            <section class="settings-section">
+              <h2>Notification Preferences</h2>
+              <label class="checkbox-label">
+                <input type="checkbox" checked> Email notifications for new requests
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" checked> SMS alerts for urgent requests
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox"> Weekly summary report
+              </label>
+            </section>
+
+            <section class="settings-section">
+              <h2>System Preferences</h2>
+              <label class="checkbox-label">
+                <input type="checkbox" checked> Dark mode
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" checked> Auto-refresh data every 5 minutes
+              </label>
+            </section>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- MODALS -->
+  <!-- Equipment Detail Modal -->
+  <div id="equipmentModal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeEquipmentModal()">&times;</span>
+      <h2 id="equipmentName">Equipment Name</h2>
+      <div class="modal-body">
+        <div class="info-grid">
+          <div><strong>Serial Number:</strong> PM-2024-001</div>
+          <div><strong>Department:</strong> Production</div>
+          <div><strong>Team:</strong> Team Alpha</div>
+          <div><strong>Technician:</strong> Mike Johnson</div>
+          <div><strong>Location:</strong> Building A, Floor 2</div>
+          <div><strong>Warranty:</strong> 2025-06-30</div>
+          <div><strong>Last Maintenance:</strong> 2024-10-15</div>
+          <div><strong>Next Maintenance:</strong> 2025-01-15</div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-primary" onclick="alert('Smart Maintenance: Creating maintenance plan...')">Smart Maintenance</button>
+          <button class="btn" onclick="closeEquipmentModal()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Request Creation Modal -->
+  <div id="requestModal" class="modal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeRequestModal()">&times;</span>
+      <h2>Create Maintenance Request</h2>
+      <form class="form" onsubmit="handleRequestSubmit(event)">
+        <div class="form-group">
+          <label>Equipment</label>
+          <select class="form-input" required>
+            <option>Pump Motor A</option>
+            <option>Drill Press B</option>
+            <option>Lathe C</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea class="form-input" rows="4" placeholder="Describe the maintenance needed..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Priority</label>
+          <select class="form-input" required>
+            <option>High</option>
+            <option>Medium</option>
+            <option>Low</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Type</label>
+          <select class="form-input" required>
+            <option>Corrective</option>
+            <option>Preventive</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Create Request</button>
+          <button type="button" class="btn" onclick="closeRequestModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
