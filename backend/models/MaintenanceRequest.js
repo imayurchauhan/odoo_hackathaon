@@ -14,6 +14,7 @@ const MaintenanceRequestSchema = new mongoose.Schema({
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   createdAt: { type: Date, default: Date.now },
   completedAt: { type: Date }
+  ,duration: { type: Number }
 }, { collection: 'maintenance_requests' });
 
 module.exports = mongoose.model('MaintenanceRequest', MaintenanceRequestSchema);

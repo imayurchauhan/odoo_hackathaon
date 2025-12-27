@@ -10,6 +10,12 @@ const MaintenanceRequest = require('./models/MaintenanceRequest');
 const seedDatabase = async () => {
   try {
     await connectDB();
+    // Clear existing data to avoid duplicate-key errors when reseeding
+    await MaintenanceRequest.deleteMany({});
+    await Equipment.deleteMany({});
+    await User.deleteMany({});
+    await Team.deleteMany({});
+    console.log('🧹 Cleared existing collections');
     
     console.log('🌱 Seeding database...');
     
@@ -31,6 +37,20 @@ const seedDatabase = async () => {
         team: teams[0]._id
       },
       {
+        name: 'John Employee',
+        email: 'john@gearguard.com',
+        passwordHash: await bcrypt.hash('password123', 10),
+        role: 'user',
+        team: teams[0]._id
+      },
+      {
+        name: 'Jane Employee',
+        email: 'jane@gearguard.com',
+        passwordHash: await bcrypt.hash('password123', 10),
+        role: 'user',
+        team: teams[1]._id
+      },
+      {
         name: 'Mike Johnson',
         email: 'mike@gearguard.com',
         passwordHash: await bcrypt.hash('password123', 10),
@@ -50,6 +70,13 @@ const seedDatabase = async () => {
         passwordHash: await bcrypt.hash('password123', 10),
         role: 'technician',
         team: teams[2]._id
+      },
+      {
+        name: 'Manager Bob',
+        email: 'manager@gearguard.com',
+        passwordHash: await bcrypt.hash('password123', 10),
+        role: 'manager',
+        team: teams[0]._id
       }
     ]);
     console.log('✅ Users created');
@@ -72,8 +99,8 @@ const seedDatabase = async () => {
         status: 'in_progress',
         priority: 'high',
         team: teams[0]._id,
-        assignedTo: users[1]._id,
-        createdBy: users[0]._id,
+        assignedTo: users[3]._id,  // Mike (technician in Team Alpha)
+        createdBy: users[1]._id,   // John (user)
         dueAt: new Date(Date.now() + 2*24*60*60*1000)
       },
       {
@@ -84,7 +111,7 @@ const seedDatabase = async () => {
         status: 'new',
         priority: 'medium',
         team: teams[1]._id,
-        createdBy: users[0]._id,
+        createdBy: users[2]._id,   // Jane (user)
         scheduledAt: new Date(Date.now() + 7*24*60*60*1000)
       },
       {
@@ -95,15 +122,20 @@ const seedDatabase = async () => {
         status: 'new',
         priority: 'low',
         team: teams[2]._id,
-        createdBy: users[0]._id
+        createdBy: users[1]._id    // John (user)
       }
     ]);
     console.log('✅ Maintenance Requests created');
     
     console.log('\n🎉 Database seeded successfully!\n');
-    console.log('📝 Sample Login Credentials:');
-    console.log('  Admin: admin@gearguard.com / password123');
-    console.log('  Tech:  mike@gearguard.com / password123\n');
+    console.log('📝 Test Login Credentials:');
+    console.log('  ADMIN:       admin@gearguard.com / password123');
+    console.log('  USER:        john@gearguard.com / password123');
+    console.log('  USER:        jane@gearguard.com / password123');
+    console.log('  TECHNICIAN:  mike@gearguard.com / password123');
+    console.log('  TECHNICIAN:  sarah@gearguard.com / password123');
+    console.log('  TECHNICIAN:  james@gearguard.com / password123');
+    console.log('  MANAGER:     manager@gearguard.com / password123\n');
     
     process.exit(0);
   } catch (err) {

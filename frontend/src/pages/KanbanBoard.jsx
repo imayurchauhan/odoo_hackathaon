@@ -2,20 +2,22 @@ import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import Avatar from '../components/Avatar';
+import DurationModal from '../components/DurationModal';
 import '../styles/kanban.css';
 
-const STATUS_ORDER = ['new', 'in_progress', 'repaired', 'scrap'];
+const STATUS_ORDER = ['new', 'in_progress', 'repaired'];
 
 const STATUS_CONFIG = {
-  new: { label: 'New Requests', icon: '📋', color: 'blue' },
+  new: { label: 'New', icon: '📋', color: 'blue' },
   in_progress: { label: 'In Progress', icon: '⚙️', color: 'orange' },
-  repaired: { label: 'Repaired', icon: '✅', color: 'green' },
-  scrap: { label: 'Scrapped', icon: '⛔', color: 'red' }
+  repaired: { label: 'Repaired', icon: '✅', color: 'green' }
 };
 
 export default function KanbanBoard() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [durationModalOpen, setDurationModalOpen] = useState(false);
+  const [pendingCardId, setPendingCardId] = useState(null);
 
   useEffect(() => { load(); }, []);
 
@@ -31,27 +33,56 @@ export default function KanbanBoard() {
     }
   };
 
-  const grouped = STATUS_ORDER.map(s => ({ 
-    status: s, 
-    items: items.filter(i => i.status === s) 
-  }));
+  const grouped = STATUS_ORDER.map(s => ({ status: s, items: items.filter(i => i.status === s) }));
 
   const onDragEnd = async (result) => {
     if (!result.destination) return;
     const { draggableId } = result;
     const destStatus = result.destination.droppableId;
 
-    if (destStatus === 'scrap') {
-      const ok = window.confirm('Move to SCRAP? This will mark the equipment as scrapped.');
-      if (!ok) return;
+    const card = items.find(i => i._id === draggableId);
+    if (!card) return;
+
+    // Only technicians (or admins) can drag
+    const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+    if (!currentUser || (currentUser.role !== 'technician' && currentUser.role !== 'admin')) {
+      alert('Only technicians can update task status');
+      return;
     }
 
+    // Ensure technician is part of the team
+    if (currentUser.role === 'technician' && String(currentUser.team) !== String(card.team?._id)) {
+      alert('You can only act on requests for your team');
+      return;
+    }
+
+    // If moving to in_progress and card is unassigned, call pick
+    if (destStatus === 'in_progress' && !card.assignedTo) {
+      try {
+        await api.post(`/maintenance/${draggableId}/pick`);
+        load();
+        return;
+      } catch (e) {
+        console.error(e);
+        alert(e.response?.data?.message || 'Unable to pick request');
+        return;
+      }
+    }
+
+    // If moving to repaired, require duration input (open modal)
+    if (destStatus === 'repaired') {
+      setPendingCardId(draggableId);
+      setDurationModalOpen(true);
+      return;
+    }
+
+    // For other moves (e.g., to new) simply update status
     try {
       await api.put(`/maintenance/${draggableId}`, { status: destStatus });
       load();
     } catch (e) {
       console.error(e);
-      alert('Error updating request');
+      alert(e.response?.data?.message || 'Error updating request');
     }
   };
 
@@ -189,6 +220,24 @@ export default function KanbanBoard() {
           ))}
         </div>
       </DragDropContext>
+      <DurationModal
+        open={durationModalOpen}
+        title="Enter duration in hours (e.g. 2.5)"
+        onCancel={() => { setDurationModalOpen(false); setPendingCardId(null); }}
+        onConfirm={async (val) => {
+          setDurationModalOpen(false);
+          const id = pendingCardId;
+          setPendingCardId(null);
+          if (!id) return;
+          try {
+            await api.put(`/maintenance/${id}`, { status: 'repaired', duration: Number(val) });
+            load();
+          } catch (e) {
+            console.error(e);
+            alert(e.response?.data?.message || 'Error marking repaired');
+          }
+        }}
+      />
     </div>
   );
 }

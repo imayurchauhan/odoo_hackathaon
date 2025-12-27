@@ -1,14 +1,40 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { logout } from '../services/authService';
+import { useAuth } from '../context/AuthContext';
 
 export default function Layout({ children }){
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = React.useState(true);
-  const navItems = [
-    { label: 'Dashboard', icon: '📊', href: '/' },
-    { label: 'Equipment', icon: '⚙️', href: '/equipment' },
-    { label: 'Requests', icon: '📋', href: '/requests/new' },
-    { label: 'Kanban', icon: '📈', href: '/kanban' },
-    { label: 'Calendar', icon: '📅', href: '/calendar' }
-  ];
+
+  // Role-based navigation
+  let navItems = [];
+  if (user?.role === 'user' || user?.role === 'employee') {
+    navItems = [
+      { label: 'My Requests', icon: '📋', href: '/my-requests' },
+      { label: 'Create Request', icon: '➕', href: '/user-create-request' }
+    ];
+  } else if (user?.role === 'technician') {
+    navItems = [
+      { label: 'My Tasks', icon: '⚙️', href: '/kanban' },
+      { label: 'Requests', icon: '📋', href: '/requests' }
+    ];
+  } else if (user?.role === 'manager') {
+    navItems = [
+      { label: 'Calendar', icon: '📅', href: '/manager-calendar' },
+      { label: 'Schedule', icon: '📝', href: '/manager-create-preventive' }
+    ];
+  } else {
+    // Admin/default
+    navItems = [
+      { label: 'Dashboard', icon: '📊', href: '/' },
+      { label: 'Equipment', icon: '⚙️', href: '/equipment' },
+      { label: 'Requests', icon: '📋', href: '/requests' },
+      { label: 'Kanban', icon: '📈', href: '/kanban' },
+      { label: 'Calendar', icon: '📅', href: '/calendar' }
+    ];
+  }
 
   const layoutStyle = {
     display: 'flex',
@@ -100,14 +126,18 @@ export default function Layout({ children }){
           {sidebarOpen ? '🔧 GearGuard' : '🔧'}
         </div>
         <div style={navStyle}>
-          {navItems.map((item, idx) => (
-            <a key={idx} href={item.href} style={{textDecoration:'none'}}>
-              <div style={navItemStyle(item.href)}>
-                <span style={{fontSize:'20px'}}>{item.icon}</span>
-                {sidebarOpen && <span>{item.label}</span>}
-              </div>
-            </a>
-          ))}
+          {localStorage.getItem('token') ? (
+            navItems.map((item, idx) => (
+              <a key={idx} href={item.href} style={{textDecoration:'none'}}>
+                <div style={navItemStyle(item.href)}>
+                  <span style={{fontSize:'20px'}}>{item.icon}</span>
+                  {sidebarOpen && <span>{item.label}</span>}
+                </div>
+              </a>
+            ))
+          ) : (
+            <div style={{padding:'16px',color:'#9aa0a6',fontSize:14}}>Please login to access navigation</div>
+          )}
         </div>
         <div style={{padding:'16px',borderTop:'1px solid rgba(255,255,255,0.1)',textAlign:'center'}}>
           <button onClick={()=>setSidebarOpen(!sidebarOpen)} style={{background:'none',border:'none',color:'#b0b0b0',cursor:'pointer',fontSize:'16px'}}>
@@ -120,8 +150,19 @@ export default function Layout({ children }){
         <div style={headerStyle}>
           <input type="text" placeholder="Search equipment, requests..." style={searchStyle} />
           <div style={profileStyle}>
-            <span>👤 Technician</span>
-            <button style={{background:'#ff6b6b',color:'#fff',border:'none',padding:'8px 16px',borderRadius:'6px',cursor:'pointer'}}>Logout</button>
+            {localStorage.getItem('token') ? (
+              <>
+                <span style={{fontSize:13,color:'#666'}}>
+                  👤 {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'User'}
+                </span>
+                <button onClick={()=>{ logout(); navigate('/login'); }} style={{background:'#ff6b6b',color:'#fff',border:'none',padding:'8px 16px',borderRadius:'6px',cursor:'pointer'}}>Logout</button>
+              </>
+            ) : (
+              <>
+                <button onClick={()=>navigate('/login')} style={{background:'#0077ff',color:'#fff',border:'none',padding:'8px 16px',borderRadius:'6px',cursor:'pointer',marginRight:8}}>Login</button>
+                <button onClick={()=>navigate('/register')} style={{background:'#22c55e',color:'#fff',border:'none',padding:'8px 16px',borderRadius:'6px',cursor:'pointer'}}>Register</button>
+              </>
+            )}
           </div>
         </div>
 

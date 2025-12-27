@@ -19,6 +19,18 @@ exports.create = async (req, res, next) => {
 exports.list = async (req, res, next) => {
   try {
     const filter = {};
+    const user = req.user;
+
+    // Role-based filtering
+    if (user.role === 'technician') {
+      // Technicians see only requests for their team
+      filter.team = user.team;
+    } else if (user.role === 'user' || user.role === 'employee') {
+      // Normal users see only requests they created
+      filter.createdBy = user.id;
+    }
+    // managers and admins see all requests
+
     if (req.query.type) filter.type = req.query.type;
     if (req.query.team) filter.team = req.query.team;
     if (req.query.status) filter.status = req.query.status;
@@ -41,8 +53,39 @@ exports.update = async (req, res, next) => {
     const mr = await MaintenanceRequest.findById(req.params.id);
     if (!mr) return res.status(404).json({ message: 'Request not found' });
 
+    const user = req.user;
     const prevStatus = mr.status;
-    Object.assign(mr, req.body);
+
+    // Technicians can only update requests for their team
+    if (user.role === 'technician' && String(user.team) !== String(mr.team)) {
+      return res.status(403).json({ message: 'Not authorized to update this request' });
+    }
+
+    // Strict status flow enforcement for technicians
+    if (user.role === 'technician' && req.body.status) {
+      const newStatus = req.body.status;
+      // Only allow valid transitions
+      const allowed = {
+        new: ['in_progress'],
+        in_progress: ['repaired']
+      };
+      const allowedNext = allowed[prevStatus] || [];
+      if (!allowedNext.includes(newStatus)) {
+        return res.status(400).json({ message: `Invalid status transition: ${prevStatus} -> ${newStatus}` });
+      }
+      // If marking in_progress or repaired, ensure the technician is assigned
+      if (newStatus === 'in_progress' || newStatus === 'repaired') {
+        if (!mr.assignedTo || String(mr.assignedTo) !== String(user.id)) {
+          return res.status(403).json({ message: 'Only assigned technician can change status to in_progress or repaired' });
+        }
+      }
+    }
+
+    // Merge allowed fields
+    const allowedFields = ['status','title','description','priority','scheduledAt','dueAt','duration'];
+    for (const k of Object.keys(req.body)) {
+      if (allowedFields.includes(k)) mr[k] = req.body[k];
+    }
 
     // If moving to scrap, mark equipment scrapped
     if (prevStatus !== 'scrap' && mr.status === 'scrap') {
@@ -51,8 +94,10 @@ exports.update = async (req, res, next) => {
       }
     }
 
-    // If moved to repaired, set completedAt and update equipment lastMaintenanceAt
+    // If moved to repaired, set completedAt, record duration and update equipment lastMaintenanceAt
     if (mr.status === 'repaired' && !mr.completedAt) {
+      // duration must be provided
+      if (!mr.duration) return res.status(400).json({ message: 'Duration is required when marking as repaired' });
       mr.completedAt = new Date();
       if (mr.equipment) await Equipment.findByIdAndUpdate(mr.equipment, { lastMaintenanceAt: mr.completedAt });
     }

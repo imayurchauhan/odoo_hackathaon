@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import '../styles/equipment.css';
 
 export default function EquipmentPage(){
+  const { user } = useAuth();
   const [items, setItems] = useState([]);
   const [form, setForm] = useState({ name:'', code:'', description:'', location:'', team: '' });
   const [showForm, setShowForm] = useState(false);
@@ -69,9 +71,11 @@ export default function EquipmentPage(){
           <h1>Equipment Management</h1>
           <p className="page-subtitle">Manage and track all maintenance equipment</p>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
-          + Add Equipment
-        </button>
+        {['admin','manager'].includes(user?.role) && (
+          <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
+            + Add Equipment
+          </button>
+        )}
       </div>
 
       {showForm && (

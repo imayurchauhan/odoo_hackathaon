@@ -1,67 +1,147 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import '../styles/dashboard.css';
 
 export default function Dashboard(){
+  const { user } = useAuth();
   const [stats, setStats] = useState({ equipment: 0, requests: 0, inProgress: 0, overdue: 0 });
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const [eqRes, reqRes] = await Promise.all([api.get('/equipment'), api.get('/maintenance')]);
-        const eq = eqRes.data.length;
-        const reqs = reqRes.data.length;
-        const inProg = reqRes.data.filter(r => r.status === 'in_progress').length;
-        const overdue = reqRes.data.filter(r => r.dueAt && new Date(r.dueAt) < new Date() && !['repaired','scrap'].includes(r.status)).length;
-        setStats({ equipment: eq, requests: reqs, inProgress: inProg, overdue });
-      } catch(e) {}
-    })();
+    load();
   }, []);
 
-  const cardStyle = {
-    background: '#fff',
-    borderRadius: '12px',
-    padding: '24px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-    transition: 'all 0.3s ease',
-    cursor: 'pointer'
+  const load = async () => {
+    setLoading(true);
+    try {
+      const [eqRes, reqRes] = await Promise.all([api.get('/equipment'), api.get('/maintenance')]);
+      const eq = eqRes.data;
+      const reqs = reqRes.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
+      
+      const inProg = reqRes.data.filter(r => r.status === 'in_progress').length;
+      const overdue = reqRes.data.filter(r => r.dueAt && new Date(r.dueAt) < new Date() && !['repaired','scrap'].includes(r.status)).length;
+      
+      setStats({ equipment: eq.length, requests: reqRes.data.length, inProgress: inProg, overdue });
+      setRequests(reqs);
+    } catch(e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const cardHoverStyle = {
-    ...cardStyle,
-    transform: 'translateY(-4px)',
-    boxShadow: '0 8px 16px rgba(0,0,0,0.12)'
+  const getStatusColor = (status) => {
+    const colors = {
+      new: 'blue',
+      in_progress: 'orange',
+      repaired: 'green',
+      scrap: 'red'
+    };
+    return colors[status] || 'gray';
   };
 
-  const CardItem = ({ title, value, icon, color }) => {
-    const [hover, setHover] = useState(false);
-    return (
-      <div style={hover ? cardHoverStyle : cardStyle} onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)}>
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'start'}}>
-          <div>
-            <div style={{fontSize:'14px',color:'#666',marginBottom:'8px'}}>{title}</div>
-            <div style={{fontSize:'32px',fontWeight:700,color:'#1a1a2e'}}>{value}</div>
-          </div>
-          <div style={{fontSize:'32px'}}>{icon}</div>
-        </div>
-        <div style={{marginTop:'12px',height:'2px',background:color,borderRadius:'2px'}}></div>
-      </div>
-    );
+  const getStatusLabel = (status) => {
+    return status.replace('_', ' ').toUpperCase();
   };
 
   return (
-    <div>
-      <h1 style={{margin:'0 0 32px 0',color:'#1a1a2e'}}>Dashboard</h1>
-      
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(250px, 1fr))',gap:'24px',marginBottom:'40px'}}>
-        <CardItem title="Total Equipment" value={stats.equipment} icon="⚙️" color="#00d4ff" />
-        <CardItem title="All Requests" value={stats.requests} icon="📋" color="#00ff88" />
-        <CardItem title="In Progress" value={stats.inProgress} icon="⚡" color="#ffa500" />
-        <CardItem title="Overdue" value={stats.overdue} icon="⚠️" color="#ff6b6b" />
+    <div className="dashboard-page">
+      <div className="dashboard-header">
+        <div className="header-content">
+          <h1>Dashboard</h1>
+          <p className="page-subtitle">Welcome to GearGuard - Your maintenance management system</p>
+          {user?.role === 'technician' && user?.team && (
+            <p style={{ marginTop: 8, fontSize: 13, color: '#666' }}>
+              👥 Team: {typeof user.team === 'string' ? user.team : user.team.name || 'Unknown'}
+            </p>
+          )}
+        </div>
+        <button className="btn btn-primary" onClick={load} title="Refresh data">
+          🔄 Refresh
+        </button>
       </div>
 
-      <div style={{background:'#fff',borderRadius:'12px',padding:'24px',boxShadow:'0 2px 8px rgba(0,0,0,0.08)'}}>
-        <h2 style={{margin:'0 0 16px 0',color:'#1a1a2e'}}>Recent Requests</h2>
-        <div style={{fontSize:'14px',color:'#999'}}>Quick view of latest maintenance requests coming soon...</div>
+      {/* Stats Cards */}
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-header">
+            <span className="stat-icon">⚙️</span>
+            <span className="stat-title">Total Equipment</span>
+          </div>
+          <div className="stat-value">{stats.equipment}</div>
+          <div className="stat-bar" style={{background: '#00d4ff'}}></div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-header">
+            <span className="stat-icon">📋</span>
+            <span className="stat-title">All Requests</span>
+          </div>
+          <div className="stat-value">{stats.requests}</div>
+          <div className="stat-bar" style={{background: '#00ff88'}}></div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-header">
+            <span className="stat-icon">⚡</span>
+            <span className="stat-title">In Progress</span>
+          </div>
+          <div className="stat-value">{stats.inProgress}</div>
+          <div className="stat-bar" style={{background: '#ffa500'}}></div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-header">
+            <span className="stat-icon\">⚠️</span>
+            <span className="stat-title">Overdue</span>
+          </div>
+          <div className="stat-value">{stats.overdue}</div>
+          <div className="stat-bar" style={{background: '#ff6b6b'}}></div>
+        </div>
+      </div>
+
+      {/* Recent Requests */}
+      <div className="recent-requests-card">
+        <div className="card-header">
+          <h2>Recent Requests</h2>
+          <a href="/requests" className="view-all">View All →</a>
+        </div>
+        
+        {loading ? (
+          <div className="loading-state">Loading requests...</div>
+        ) : requests.length > 0 ? (
+          <div className="requests-list">
+            {requests.map(req => {
+              const isOverdue = req.dueAt && new Date(req.dueAt) < new Date() && !['repaired','scrap'].includes(req.status);
+              return (
+                <div key={req._id} className={`request-item ${isOverdue ? 'overdue' : ''}`}>
+                  <div className="request-left">
+                    <div className="request-title">{req.title}</div>
+                    <div className="request-meta">
+                      <span className="equipment-badge">⚙️ {req.equipment?.name || 'Unknown'}</span>
+                      {req.dueAt && (
+                        <span className="date-badge">📅 {new Date(req.dueAt).toLocaleDateString()}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="request-right">
+                    <span className={`status-badge status-${getStatusColor(req.status)}`}>
+                      {getStatusLabel(req.status)}
+                    </span>
+                    {isOverdue && <span className="overdue-indicator">⚠️ Overdue</span>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="empty-state">
+            <div className="empty-icon">📭</div>
+            <p>No maintenance requests yet</p>
+          </div>
+        )}
       </div>
     </div>
   );

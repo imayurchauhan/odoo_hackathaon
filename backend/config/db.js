@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const connectDB = async () => {
   try {
     const uri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/gearguard';
+    console.log('[db] connecting to MongoDB URI:', uri);
     await mongoose.connect(uri, {
       retryWrites: false,
       serverSelectionTimeoutMS: 5000,
