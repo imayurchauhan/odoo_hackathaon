@@ -24,6 +24,7 @@ export default function Layout({ children }){
   } else if (user?.role === 'manager') {
     navItems = [
       { label: 'Calendar', icon: '📅', href: '/manager-calendar' },
+      { label: 'Requests', icon: '📋', href: '/requests' },
       { label: 'Schedule', icon: '📝', href: '/manager-create-preventive' }
     ];
   } else {
